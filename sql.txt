@@ -1,0 +1,104 @@
+p1
+create schema pandemic
+
+use pandemic;
+
+SELECT * FROM infectious_cases
+
+p2_1
+CREATE TABLE countries (
+country_id INT AUTO_INCREMENT PRIMARY KEY,
+entity VARCHAR(45),
+code varchar(45)
+);
+
+p2_2
+INSERT INTO countries (entity, code)
+SELECT distinct Entity,  Code FROM pandemic.infectious_cases;
+
+p2_3
+CREATE TABLE infectious_data (
+id INT AUTO_INCREMENT PRIMARY KEY,
+country_id INT,
+year YEAR ,
+Number_yaws TEXT,
+polio_cases INT,
+cases_guinea_worm INT,
+Number_rabies TEXT,
+Number_malaria TEXT,
+Number_hiv TEXT,
+Number_tuberculosis TEXT,
+Number_smallpox TEXT,
+Number_cholera_cases TEXT,
+FOREIGN KEY (country_id) REFERENCES countries(country_id)
+);
+
+p2_4
+INSERT INTO infectious_data (
+`country_id`,
+`year`,
+`Number_yaws`,
+`polio_cases`,
+`cases_guinea_worm`,
+`Number_rabies`,
+`Number_malaria`,
+`Number_hiv`,
+`Number_tuberculosis`,
+`Number_smallpox`,
+`Number_cholera_cases`
+)
+select 
+`country_id`,
+`year`,
+`Number_yaws`,
+`polio_cases`,
+`cases_guinea_worm`,
+`Number_rabies`,
+`Number_malaria`,
+`Number_hiv`,
+`Number_tuberculosis`,
+`Number_smallpox`,
+`Number_cholera_cases` 
+from infectious_cases ic
+inner join countries c on ic.Entity=c.entity and ic.Code=c.code
+
+p3
+SELECT
+country_id, 
+avg(Number_rabies), 
+min(Number_rabies), 
+max(Number_rabies), 
+sum(Number_rabies)
+FROM infectious_data
+WHERE Number_rabies != ""
+GROUP BY country_id
+ORDER BY avg(Number_rabies) desc
+limit 10
+
+p4
+SELECT 
+makedate(Year,1), 
+current_date(), 
+timestampdiff(YEAR, makedate(Year,1), current_date()) 
+FROM infectious_data;
+
+p5_1
+DELIMITER //
+
+CREATE FUNCTION custom_datediff(input_date date)
+RETURNS INT
+DETERMINISTIC 
+NO SQL
+BEGIN
+    RETURN YEAR(CURDATE())-YEAR(input_date);
+END //
+
+DELIMITER ;
+
+p5_2
+SELECT 
+makedate(Year,1), 
+current_date(), 
+timestampdiff(YEAR, makedate(Year,1), current_date()),
+custom_datediff(makedate(Year,1))
+FROM infectious_data;
